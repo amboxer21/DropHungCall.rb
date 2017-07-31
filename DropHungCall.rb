@@ -6,8 +6,9 @@ class CheckMGsForHungCalls
 
   ASTERISK_RX = '/usr/sbin/asterisk -rx '
 
-  def initialize(username="your username goes here",password="your password goes here")
+  def initialize(username="aguevara",password="LIMA peru 2",count=0)
 
+    @count    = count
     @username = username
     @password = password
 
@@ -80,8 +81,11 @@ class CheckMGsForHungCalls
         puts "#{@showCalls.to_s.match(/SIP.*#{number}.*/)}" if !verbose
         wait_for_user_input("Enter a SIP channel to hangup: ")
         hangup_channel(server, @ans)
-        break
+        @count = 0 # Re-initialize @count
+      else
+        @count = @count + 1
       end
+      puts "Number not found!" if @count == 7
     end
   end
 
