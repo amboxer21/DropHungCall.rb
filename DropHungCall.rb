@@ -6,7 +6,7 @@ class CheckMGsForHungCalls
 
   ASTERISK_RX = '/usr/sbin/asterisk -rx '
 
-  def initialize(username="aguevara",password="LIMA peru 2",count=0)
+  def initialize(username="your username goes here",password="your password goes here",count=0)
 
     @count    = count
     @username = username
