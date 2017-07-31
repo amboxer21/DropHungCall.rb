@@ -29,14 +29,13 @@ class CheckMGsForHungCalls
     exit
   end
 
-  def verbose(line)
-
-    return if ARGV[1].nil?
+  def verbose
+    return false if ARGV[1].nil?
     $arg1 = ARGV[1]
 
     case $arg1
       when "--verbose", "verbose", "-v"
-        puts line
+        return true 
       else
         puts "Not a known option."
         usage
@@ -76,8 +75,9 @@ class CheckMGsForHungCalls
     #for @i in ["vhpbx0","vhpbx1","vhpbx2","vhpbx3","mg0","mg1","mg2","mg3","mg4","mg5","mg6"] do
     for server in ["mg0","mg1","mg2","mg3","mg4","mg5","mg6"] do
       tunnel(server, 'core show channels verbose')
-      if @showCalls.to_s.match(/SIP.*8484820667.*/)
-        puts "#{@showCalls.to_s.match(/SIP.*8484820667.*/)}"
+      if @showCalls.to_s.match(/SIP.*#{number}.*/)
+        puts @showCalls if verbose 
+        puts "#{@showCalls.to_s.match(/SIP.*#{number}.*/)}" if !verbose
         wait_for_user_input("Enter a SIP channel to hangup: ")
         hangup_channel(server, @ans)
         break
