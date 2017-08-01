@@ -30,19 +30,6 @@ class CheckMGsForHungCalls
     exit
   end
 
-  def verbose
-    return false if ARGV[1].nil?
-    $arg1 = ARGV[1]
-
-    case $arg1
-      when "--verbose", "verbose", "-v"
-        return true 
-      else
-        puts "Not a known option."
-        usage
-    end
-  end
-
   def wait_for_user_input(prompt)
     print "#{prompt} "
     @ans = STDIN.gets.chomp
@@ -77,8 +64,7 @@ class CheckMGsForHungCalls
     for server in ["mg0","mg1","mg2","mg3","mg4","mg5","mg6"] do
       tunnel(server, 'core show channels verbose')
       if @showCalls.to_s.match(/SIP.*#{number}.*/)
-        puts @showCalls if verbose 
-        puts "#{@showCalls.to_s.match(/SIP.*#{number}.*/)}" if !verbose
+        puts "#{@showCalls.to_s.match(/SIP.*#{number}.*/)}"
         wait_for_user_input("Enter a SIP channel to hangup: ")
         hangup_channel(server, @ans)
         @count = 0 # Re-initialize @count
