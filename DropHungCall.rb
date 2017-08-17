@@ -22,11 +22,9 @@ class CheckMGsForHungCalls
   end
 
   def usage
-    puts "\n\n    Usage: ./get_mgs.rb <10 digit telephone number or extension> [options]\n\n"
-    puts "    Only current supported option is to run this command with verbosity.\n"
-    puts "    Verbosity displays all on going calls in all MGs we are currently traversing.\n\n"
-    puts "        Options:\n        help, --help, -h,    Display this help messgage."
-    puts "        verbose, --verbose, -h,    Display all ongoing calls in the Mgs we are currently traversing.\n\n"
+    puts "\n\n    Usage: drop_hung_call.rb <10 digit telephone number or extension>\n\n"
+    puts "    Only current supported option is help.\n"
+    puts "        Options:\n        help, --help, -h,    Display this help messgage.\n\n"
     exit
   end
 
