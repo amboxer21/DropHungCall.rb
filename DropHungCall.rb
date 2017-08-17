@@ -61,7 +61,7 @@ class CheckMGsForHungCalls
 
   def asterisk_rx(number)
     #for @i in ["vhpbx0","vhpbx1","vhpbx2","vhpbx3","mg0","mg1","mg2","mg3","mg4","mg5","mg6"] do
-    for server in ["mg0","mg1","mg2","mg3","mg4","mg5","mg6"] do
+    for server in ["mg0","mg1","mg2","mg3","mg4","mg5","mg6","pl-mg0", "pl-mg1"] do
       tunnel(server, 'core show channels verbose')
       if @showCalls.to_s.match(/SIP.*#{number}.*/)
         puts "#{@showCalls.to_s.match(/SIP.*#{number}.*/)}"
