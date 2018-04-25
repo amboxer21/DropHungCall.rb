@@ -47,12 +47,11 @@ class CheckMGsForHungCalls
     end
   end
 
-  @@test = {}
+  @@channel = {}
   def tunnel(server, ast_command)
     begin
       Net::SSH.start(server, @username, :password => @password) do |ssh|
-        #@showCalls = ssh.exec!("#{ASTERISK_RX}'#{ast_command}'")
-        @@test[server] = ssh.exec!("#{ASTERISK_RX}'#{ast_command}'")
+        @@channel[server] = ssh.exec!("#{ASTERISK_RX}'#{ast_command}'")
       end
     rescue Exception => e
       puts "Exception e => #{e}"
@@ -65,9 +64,8 @@ class CheckMGsForHungCalls
     for s in ["mg0","mg1","mg2","mg3","mg4","mg5","mg6","pl-mg0"] do
       tunnel(s, 'core show channels verbose')
     end
-    @@test.each do |server,channel|
+    @@channel.each do |server,channel|
       if channel =~ /SIP.*#{number}.*/
-        puts "channel => #{channel.scan(/SIP.*#{number}.*/)}"
         @count = 0 # Re-initialize @count
         (print "(Server)[#{server}] "; puts channel.scan(/SIP.*#{number}.*/))
       else
@@ -76,7 +74,7 @@ class CheckMGsForHungCalls
       (puts "Telephone number #{number} not found!"; return) if @count == 8
     end
     wait_for_user_input("Enter a SIP channel to hangup: ")
-    @@test.each do |key,val|
+    @@channel.each do |key,val|
       hangup_channel(key, @ans) if val =~ /#{@ans}/
     end
   end
