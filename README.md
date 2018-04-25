@@ -1,2 +1,2 @@
 # DropHungCall.rb
-Drop hung calls in the MGs
+Drop hung calls in our companies media gateways running Asterisk
