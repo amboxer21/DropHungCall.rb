@@ -1,11 +1,11 @@
-#!/usr/local/bin/ruby
+#!/usr/local/ruby-2.2.7/bin/ruby
 
 require 'net/ssh'
 
 class CheckMGsForHungCalls
 
   ASTERISK_RX = '/usr/sbin/asterisk -rx '
-
+  
   def initialize(username="your username goes here",password="your password goes here",count=0)
 
     @count    = count
@@ -37,39 +37,47 @@ class CheckMGsForHungCalls
     if channel.to_s.match("SIP\/[0-9a-z]+-[0-9a-z]+")
       wait_for_user_input("Hangup channel -> [#{channel}](\"YES\")? ")
       if @ans.to_s.match("YES")
-        puts "Hanging up SIP channel on #{server}"
         tunnel(server, "soft hangup #{channel}")
       else
         puts "SIP channel [#{channel}] was not hung up. GOOD BYE!"
       end
     else
       puts "#{channel} is not a known SIP channel. GOOD BYE!"
+      exit
     end
   end
 
+  @@test = {}
   def tunnel(server, ast_command)
     begin
       Net::SSH.start(server, @username, :password => @password) do |ssh|
-        @showCalls = ssh.exec!("#{ASTERISK_RX}'#{ast_command}'")
+        #@showCalls = ssh.exec!("#{ASTERISK_RX}'#{ast_command}'")
+        @@test[server] = ssh.exec!("#{ASTERISK_RX}'#{ast_command}'")
       end
-    rescue
+    rescue Exception => e
+      puts "Exception e => #{e}"
       puts "Unable to connect to #{server} using #{@username}/#{@password}"
     end
   end
 
   def asterisk_rx(number)
-    #for @i in ["vhpbx0","vhpbx1","vhpbx2","vhpbx3","mg0","mg1","mg2","mg3","mg4","mg5","mg6"] do
-    for server in ["mg0","mg1","mg2","mg3","mg4","mg5","mg6","pl-mg0", "pl-mg1"] do
-      tunnel(server, 'core show channels verbose')
-      if @showCalls.to_s.match(/SIP.*#{number}.*/)
-        puts "#{@showCalls.to_s.match(/SIP.*#{number}.*/)}"
-        wait_for_user_input("Enter a SIP channel to hangup: ")
-        hangup_channel(server, @ans)
+    #for s in ["mg0","mg1","mg2","mg3","mg4","mg5","mg6","pl-mg0", "pl-mg1"] do
+    for s in ["mg0","mg1","mg2","mg3","mg4","mg5","mg6","pl-mg0"] do
+      tunnel(s, 'core show channels verbose')
+    end
+    @@test.each do |server,channel|
+      if channel =~ /SIP.*#{number}.*/
+        puts "channel => #{channel.scan(/SIP.*#{number}.*/)}"
         @count = 0 # Re-initialize @count
+        (print "(Server)[#{server}] "; puts channel.scan(/SIP.*#{number}.*/))
       else
-        @count = @count + 1
+        @count += 1
       end
-      puts "Number not found!" if @count == 7
+      (puts "Telephone number #{number} not found!"; return) if @count == 8
+    end
+    wait_for_user_input("Enter a SIP channel to hangup: ")
+    @@test.each do |key,val|
+      hangup_channel(key, @ans) if val =~ /#{@ans}/
     end
   end
 
