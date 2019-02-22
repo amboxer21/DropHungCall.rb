@@ -5,17 +5,20 @@ require 'net/ssh'
 class CheckMGsForHungCalls
 
   ASTERISK_RX = '/usr/sbin/asterisk -rx '
-  
-  def initialize(username="your username goes here",password="your password goes here",count=0)
 
-    @count    = count
+  def initialize(username="username",password="password")
+
     @username = username
     @password = password
 
-    usage if ARGV[0].nil?
-    $arg0 = ARGV[0]
+    @mgs = [
+      "mg0","mg1","mg2","mg3","mg4","mg5","mg6","pl-mg0"
+    ]
 
-    case $arg0
+    usage if ARGV[0].nil?
+    @number = ARGV[0]
+
+    case @number
       when "help", "--help", "-h"
         usage
     end
@@ -25,7 +28,16 @@ class CheckMGsForHungCalls
     puts "\n\n    Usage: drop_hung_call.rb <10 digit telephone number or extension>\n\n"
     puts "    Only current supported option is help.\n"
     puts "        Options:\n        help, --help, -h,    Display this help messgage.\n\n"
+    puts "    This script checks the following servers: #{@mgs.join(' ')}.\n\n" 
     exit
+  end
+
+  def display_warning
+    puts "\nWARNING! This script \"ONLY\" checks the following MG's: #{@mgs.join(' ')}.\n\n"
+  end
+
+  def orphaned_calls(channel)
+    puts channel if channel =~ (/[1-9]\d+:\d+:\d+/)
   end
 
   def wait_for_user_input(prompt)
@@ -47,7 +59,7 @@ class CheckMGsForHungCalls
     end
   end
 
-  @@channel = {}
+  @@channel = {'exit': true}
   def tunnel(server, ast_command)
     begin
       Net::SSH.start(server, @username, :password => @password) do |ssh|
@@ -59,20 +71,22 @@ class CheckMGsForHungCalls
     end
   end
 
-  def asterisk_rx(number)
-    #for s in ["mg0","mg1","mg2","mg3","mg4","mg5","mg6","pl-mg0", "pl-mg1"] do
-    for s in ["mg0","mg1","mg2","mg3","mg4","mg5","mg6","pl-mg0"] do
-      tunnel(s, 'core show channels verbose')
+  def asterisk_rx(command)
+    display_warning
+    for server in @mgs do
+      tunnel(server, command)
     end
+  end
+
+  def parse_output
     @@channel.each do |server,channel|
-      if channel =~ /SIP.*#{number}.*/
-        @count = 0 # Re-initialize @count
-        (print "(Server)[#{server}] "; puts channel.scan(/SIP.*#{number}.*/))
-      else
-        @count += 1
+      #orphaned_calls(channel)
+      if channel =~ /^(PJSIP|SIP).*#{@number}.*\b/
+        @@channel[:exit] = false
+        (print "\n(Server)[#{server}]\n"; puts channel.scan(/SIP.*#{@number}.*/))
       end
-      (puts "Telephone number #{number} not found!"; return) if @count == 8
     end
+    (puts "Telephone number #{@number} was NOT found!"; return) if @@channel[:exit]
     wait_for_user_input("Enter a SIP channel to hangup: ")
     @@channel.each do |key,val|
       hangup_channel(key, @ans) if val =~ /#{@ans}/
@@ -82,4 +96,5 @@ class CheckMGsForHungCalls
 end
 
 mgCheck = CheckMGsForHungCalls.new
-mgCheck.asterisk_rx(ARGV[0])
+mgCheck.asterisk_rx('core show channels verbose')
+mgCheck.parse_output
