@@ -76,9 +76,10 @@ class CheckMGsForHungCalls
         tunnel(server, "soft hangup #{channel}")
       else
         puts "SIP channel [#{channel}] was not hung up. GOOD BYE!"
+        exit
       end
     else
-      puts "#{channel} is not a known SIP channel. GOOD BYE!"
+      puts "Channel(#{channel}) does not use proper format. GOOD BYE!"
       exit
     end
   end
@@ -94,7 +95,6 @@ class CheckMGsForHungCalls
       end
     rescue Exception => exception
       puts "Exception e => #{exception}"
-      puts "Unable to connect to #{server} using #{@username}/#{@password}"
     ensure
       @@result.each do |server,result|
         @@result.delete(server) if result.match(/is not a known channel/)
