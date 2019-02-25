@@ -11,7 +11,7 @@ class CheckMGsForHungCalls
 
   ASTERISK_RX = '/usr/sbin/asterisk -rx '
 
-  def initialize(username="aguevara",password="LIMA peru 2")
+  def initialize(username="username",password="password")
 
     @orphans  = []
     @username = username
