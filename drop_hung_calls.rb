@@ -125,7 +125,7 @@ class CheckMGsForHungCalls
 
   def parse_output
     @@channel.each do |server,channel|
-      chan = channel.scan(/(#{CHANNEL})(.*)(\s|SIP\/)(#{@options.number})(\s|@)(.*)\n/).join(' ')
+      chan = channel.scan(/(#{CHANNEL})(.*)(\s|SIP\/)(#{@options.number})(\d+\s|\s|@)(.*)\n/).join(' ')
       unless chan.empty?
         @@channel[:output] = 'false'
         print "\n(#{@options.number})[Server] -> (#{server})\n"
