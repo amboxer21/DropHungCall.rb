@@ -23,18 +23,24 @@ class CheckMGsForHungCalls
     ]
 
     OptionParser.new do |opt|
-      opt.on("-nNUMBER", "--number NUMBER", Integer, "Hung phone number to search for in the MGs.") do |number|
-        @options.number = number
+
+      @msg1 = 'Hung phone number to search for in the MGs.'
+      @msg2 = 'This options displays long standing calls.'
+      @msg3 = 'Return orphans that have been up longer than this specified hour.'
+
+      opt.on('-nNUMBER', '--number NUMBER', Integer, @msg1) do |number|
+        number.nil? ? usage('Please specify a phone number.') : (@options.number = number)
       end
-      opt.on('-O','--orphans', TrueClass, 'This options displays long standing calls.') do |orphan|
-        @options.orphans = orphan 
+      opt.on('-O','--orphans', TrueClass, @msg2) do |orphan|
+        @options.orphans = orphan.nil? ? false : orphan
+      end
+      opt.on('-tHOUR', '--orphan-threshold HOUR', Integer, @msg3) do |hour|
+        @options.hour = hour.nil? ? 5 : hour
       end
       opt.on("-h","--help", "Diaplay usage info.") do |help|
         usage  
       end
     end.parse!
-
-    usage('Please specify a phone number.') if @options.number.nil? 
 
   end
 
@@ -55,14 +61,16 @@ class CheckMGsForHungCalls
     puts "\nWARNING! This script \"ONLY\" checks the following MG's: #{@mgs.join(' ')}.\n\n"
   end
 
+  def threshold(hour)
+    "[0-9][#{hour}-9]|[1-9][0-9]"
+  end
+
   def orphaned_calls
-    return unless @options.orphans
-    puts "\n!! ORPHANED CALLS !!\n" 
     @@channel.each do |server,channel|
-      chan = channel.scan(/(\nSIP\/[\w\d\-]+)(.*\s)([0-9][5-9]|[1-9][0-9])(:\d+)(:\d+)(.*)\n/).join(' ')
-      unless chan.empty? 
+      chan = channel.scan(/(\nSIP\/[\w\d\-]+)(.*\s)(#{threshold(@options.hour)})(:\d+)(:\d+)(.*)\n/).join(' ')
+      if @options.orphans and !chan.empty? 
         @@channel[:orphans] = 'false'
-        (print "\n\n(Server)[#{server}]"; puts chan)
+        (print "\n\n(Orphaned Calls)[Server] -> (#{server})"; puts chan)
       end
     end
     (puts "No orphaned calls were found."; return) if @@channel[:orphans].eql? 'true'
@@ -115,12 +123,12 @@ class CheckMGsForHungCalls
   end
 
   def parse_output
-    puts "\n!! HUNG CALLS !!\n"
     @@channel.each do |server,channel|
       chan = channel.scan(/(\nSIP\/[\w\d\-]+)(.*\s)(#{@options.number})(.*)\n/).join(' ')
       unless chan.empty?
         @@channel[:output] = 'false'
-        (print "\n(Server)[#{server}]\n"; puts channel.scan(/SIP.*#{@options.number}.*/))
+        print "\n(#{@options.number})[Server] -> (#{server})\n"
+        puts channel.scan(/SIP.*#{@options.number}.*/)
       end
     end
     if @@channel[:output].eql? 'true' and @@channel[:orphans].eql? 'true'
