@@ -11,7 +11,7 @@ class CheckMGsForHungCalls
 
   ASTERISK_RX = '/usr/sbin/asterisk -rx '
 
-  def initialize(username="username",password="password")
+  def initialize(username="aguevara",password="LIMA peru 2")
 
     @orphans  = []
     @username = username
@@ -25,6 +25,9 @@ class CheckMGsForHungCalls
     OptionParser.new do |opt|
       opt.on("-nNUMBER", "--number NUMBER", Integer, "Hung phone number to search for in the MGs.") do |number|
         @options.number = number
+      end
+      opt.on('-O','--orphans', TrueClass, 'This options displays long standing calls.') do |orphan|
+        @options.orphans = orphan 
       end
       opt.on("-h","--help", "Diaplay usage info.") do |help|
         usage  
@@ -40,8 +43,9 @@ class CheckMGsForHungCalls
     puts "\n    ** #{message} ** \n" unless message.nil? or message.empty?
 
     puts "\n\n    Usage: drop_hung_call.rb --number=NUMBER or -nNUMBER\n\n"
-    puts "    Options:\n        help, --help, -h,    Display this help messgage.\n\n"
-    puts "    Options:\n        help, --number, -n,    Hung phone number to search for in the MGs.\n"
+    puts "    Option:\n        help, --help, -h,    Display this help messgage.\n\n"
+    puts "    Option:\n        orphans, --orphans, -O, This options displays long standing calls.\n\n"
+    puts "    Option:\n        number, --number, -n,    Hung phone number to search for in the MGs.\n"
     puts "        This option does not have to be a 10 digit number and can even be an extension.\n\n"
     puts "    This script checks the following servers: #{@mgs.join(' ')}.\n\n"
     exit
@@ -52,6 +56,7 @@ class CheckMGsForHungCalls
   end
 
   def orphaned_calls
+    return unless @options.orphans
     puts "\n!! ORPHANED CALLS !!\n" 
     @@channel.each do |server,channel|
       chan = channel.scan(/(\nSIP\/[\w\d\-]+)(.*\s)([0-9][5-9]|[1-9][0-9])(:\d+)(:\d+)(.*)\n/).join(' ')
