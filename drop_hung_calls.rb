@@ -67,7 +67,7 @@ class CheckMGsForHungCalls
 
   def orphaned_calls
     @@channel.each do |server,channel|
-      chan = channel.scan(/(\nSIP\/[\w\d\-]+)(.*\s)(#{threshold(@options.hour)})(:\d+)(:\d+)(.*)\n/).join(' ')
+      chan = channel.scan(/(\nSIP|\nDAHDI)(\/)(.*)(\s)(#{threshold(@options.hour)})(:\d+)(:\d+)(\s)(.*)\n/).join(' ')
       if @options.orphans and !chan.empty? 
         @@channel[:orphans] = 'false'
         (print "\n\n(Orphaned Calls)[Server] -> (#{server})"; puts chan)
@@ -124,11 +124,11 @@ class CheckMGsForHungCalls
 
   def parse_output
     @@channel.each do |server,channel|
-      chan = channel.scan(/(\nSIP\/[\w\d\-]+)(.*\s)(#{@options.number})(.*)\n/).join(' ')
+      chan = channel.scan(/(\nSIP|\nDAHDI)(\/)(.*)(\s|SIP\/)(#{@options.number})(\s|@)(.*)\n/).join(' ')
       unless chan.empty?
         @@channel[:output] = 'false'
         print "\n(#{@options.number})[Server] -> (#{server})\n"
-        puts channel.scan(/SIP.*#{@options.number}.*/)
+        puts chan
       end
     end
     if @@channel[:output].eql? 'true' and @@channel[:orphans].eql? 'true'
