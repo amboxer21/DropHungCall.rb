@@ -128,7 +128,7 @@ class CheckMGsForHungCalls
       chan = channel.scan(/(#{CHANNEL})(.*)(\s|SIP\/)(#{@options.number})(\d+\s|\s|@)(.*)\n/).join(' ')
       unless chan.empty?
         @@channel[:output] = 'false'
-        print "\n(#{@options.number})[Server] -> (#{server})\n"
+        print "\n(#{@options.number})[Server] -> (#{server})"
         puts chan
       end
     end
